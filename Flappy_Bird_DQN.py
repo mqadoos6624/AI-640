@@ -42,7 +42,7 @@ img_rows , img_cols = 80, 80
 img_channels = 4 #We stack 4 frames
 
 def buildmodel():
-    print("Now we build the model")
+    # Convolutional Neural Network Model:
     model = models.Sequential()
     model.add(layers.Conv2D(32, (8,8), strides=(4,4), padding='same', activation='relu', input_shape = (80,80,4)))
     model.add(layers.MaxPooling2D(2,2))
@@ -54,7 +54,6 @@ def buildmodel():
     model.add(layers.Dense(2, activation='relu'))
 
     model.compile(optimizer='adam', loss=tf.keras.losses.mean_squared_error, metrics=['accuracy'])
-    print("We finish building the model")
     return model
 
 
@@ -62,7 +61,7 @@ def trainNetwork(model,args):
     # open up a game state to communicate with emulator
     game_state = game.GameState()
 
-    # store the previous observations in replay memory
+    # store the previous observations in Experience replay memory
     D = deque()
 
     # get the first state by doing nothing and preprocess the image to 80x80x4
@@ -74,20 +73,18 @@ def trainNetwork(model,args):
     x_t = skimage.transform.resize(x_t,(80,80))
     x_t = skimage.exposure.rescale_intensity(x_t,out_range=(0,255))
 
+    # Normalizing the Image Data:
     x_t = x_t / 255.0
 
     s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
-    #print (s_t.shape)
 
-    #In Keras, need to reshape
+    #In Keras, need to reshape to Theano Configuration
     s_t = s_t.reshape(1, s_t.shape[0], s_t.shape[1], s_t.shape[2])  #1*80*80*4
 
-    
-
     if args['mode'] == 'Run':
-        OBSERVE = 999999999    #We keep observe, never train
+        OBSERVE = 999999999    #Keep observe, Never train
         epsilon = FINAL_EPSILON
-        print ("Now we load weight")
+        print ("Now Load Weight")
         model.load_weights("model.h5")
         adam = Adam(lr=LEARNING_RATE)
         model.compile(loss='mse',optimizer=adam)
@@ -126,9 +123,7 @@ def trainNetwork(model,args):
         x_t1 = skimage.transform.resize(x_t1,(80,80))
         x_t1 = skimage.exposure.rescale_intensity(x_t1, out_range=(0, 255))
 
-
         x_t1 = x_t1 / 255.0
-
 
         x_t1 = x_t1.reshape(1, x_t1.shape[0], x_t1.shape[1], 1) #1x80x80x1
         s_t1 = np.append(x_t1, s_t[:, :, :, :3], axis=3)
@@ -174,10 +169,9 @@ def trainNetwork(model,args):
 
         print("TIMESTEP", t, "/ STATE", state, \
             "/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, \
-            "/ Q_MAX " , np.max(Q_sa), "/ Loss ", loss)
+            "/ Q_MAX " , np.round(np.max(Q_sa),5), "/ Loss ", loss)
 
-    print("Episode finished!")
-    print("#######################")
+    print("####### Episode finished! ########")
 
 def playGame(args):
     model = buildmodel()
