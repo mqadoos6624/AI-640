@@ -11,4 +11,4 @@ But if you want to train the model from again from scratch. First delete "model.
       
             Python Flappy_Bird_DQN.py -m "Train"
       
-This will create a new model.h5 after done with traning (it will take time), then we can test the model performace.
+This will create a new model.h5 after done with traning (it will take time), then you can test the model performace.
